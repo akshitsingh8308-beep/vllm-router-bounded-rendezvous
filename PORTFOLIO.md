@@ -73,11 +73,18 @@ rustc -O tools/bounded_rendezvous_sim.rs -o bounded-sim
 ./bounded-sim
 ```
 
-In the local synthetic run, maximum in-flight requests on one worker fell
-from **18 to 8**; repeat-session remapping rose from **0% to 34.1%**. The
-simulation's hash function differs from the router's production hash. The
-Linux example above runs the actual router policies and should be preferred
-for a final published benchmark.
+In the local portable simulation, maximum in-flight requests on one worker
+fell from **18 to 8**; repeat-session remapping rose from **0% to 34.1%**.
+That simulator's hash function differs from the router's production hash.
+The [successful Linux CI run](https://github.com/akshitsingh8308-beep/vllm-router-bounded-rendezvous/actions/runs/44024159928)
+executed the example with the actual router policies and reported:
+
+| Policy | Peak in-flight on one worker | Mean peak in-flight | Repeat-session remapping |
+| --- | ---: | ---: | ---: |
+| `rendezvous_hash` | 18 | 15.488 | 0% |
+| `bounded_rendezvous` | 8 | 7.9565 | 34.4% |
+
+This is an admission simulation, not a real GPU latency or throughput result.
 
 For a stronger evaluation, run the router against at least two real vLLM
 workers with prefix caching enabled and replay a shared-prefix workload.
@@ -98,8 +105,9 @@ Only add numeric performance claims after real-engine measurements.
 On Windows, the dependency-free core passed four unit tests and the portable
 simulation ran. The full router build was attempted but stopped in upstream
 `vllm-engine-core-client`, which uses `tokio::net::UnixStream` and requires a
-Unix target. `.github/workflows/bounded-rendezvous.yml` runs the full policy
-tests and actual-policy benchmark on Linux after the repository is pushed.
+Unix target. The [Linux CI run](https://github.com/akshitsingh8308-beep/vllm-router-bounded-rendezvous/actions/runs/44024159928)
+passed Rust formatting, bounded-rendezvous library tests, and the actual-policy
+benchmark. The workflow is in `.github/workflows/bounded-rendezvous.yml`.
 
 ## Provenance
 
