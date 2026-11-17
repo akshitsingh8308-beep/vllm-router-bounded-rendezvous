@@ -120,8 +120,12 @@ struct CliArgs {
     worker_urls: Vec<String>,
 
     /// Load balancing policy to use. kv_aware uses stage-specific load profiles in PD mode.
-    #[arg(long, default_value = "cache_aware", value_parser = ["random", "round_robin", "cache_aware", "kv_aware", "power_of_two", "consistent_hash", "sticky_least_loaded", "rendezvous_hash"])]
+    #[arg(long, default_value = "cache_aware", value_parser = ["random", "round_robin", "cache_aware", "kv_aware", "power_of_two", "consistent_hash", "sticky_least_loaded", "rendezvous_hash", "bounded_rendezvous"])]
     policy: String,
+
+    /// Soft load cap multiplier for bounded_rendezvous (finite, at least 1.0).
+    #[arg(long, default_value_t = 1.25)]
+    bounded_load_factor: f64,
 
     /// Enable Program-level scheduling independently of the request-level
     /// load-balancing policy.
@@ -159,11 +163,11 @@ struct CliArgs {
     pd_kv_events: Vec<String>,
 
     /// Specific policy for prefill nodes in PD mode. kv_aware uses the prefill load profile.
-    #[arg(long, value_parser = ["random", "round_robin", "cache_aware", "kv_aware", "power_of_two", "consistent_hash", "sticky_least_loaded", "rendezvous_hash"])]
+    #[arg(long, value_parser = ["random", "round_robin", "cache_aware", "kv_aware", "power_of_two", "consistent_hash", "sticky_least_loaded", "rendezvous_hash", "bounded_rendezvous"])]
     prefill_policy: Option<String>,
 
     /// Specific policy for decode nodes in PD mode (defaults to --policy).
-    #[arg(long, value_parser = ["random", "round_robin", "cache_aware", "kv_aware", "power_of_two", "consistent_hash", "sticky_least_loaded", "rendezvous_hash"])]
+    #[arg(long, value_parser = ["random", "round_robin", "cache_aware", "kv_aware", "power_of_two", "consistent_hash", "sticky_least_loaded", "rendezvous_hash", "bounded_rendezvous"])]
     decode_policy: Option<String>,
 
     /// Timeout in seconds for worker startup
@@ -464,6 +468,9 @@ impl CliArgs {
             },
             "sticky_least_loaded" => PolicyConfig::StickyLeastLoaded,
             "rendezvous_hash" => PolicyConfig::RendezvousHash,
+            "bounded_rendezvous" => PolicyConfig::BoundedRendezvous {
+                load_factor: self.bounded_load_factor,
+            },
             _ => PolicyConfig::RoundRobin, // Fallback
         }
     }

@@ -1,9 +1,9 @@
 //! Factory for creating load balancing policies
 
 use super::{
-    CacheAwareConfig, CacheAwarePolicy, ConsistentHashPolicy, CostParams, KvAffinityTable,
-    KvAwarePolicy, LoadBalancingPolicy, PowerOfTwoPolicy, RandomPolicy, RendezvousHashPolicy,
-    RoundRobinPolicy, StickyLeastLoadedPolicy, TransferCredits,
+    BoundedRendezvousPolicy, CacheAwareConfig, CacheAwarePolicy, ConsistentHashPolicy, CostParams,
+    KvAffinityTable, KvAwarePolicy, LoadBalancingPolicy, PowerOfTwoPolicy, RandomPolicy,
+    RendezvousHashPolicy, RoundRobinPolicy, StickyLeastLoadedPolicy, TransferCredits,
 };
 use crate::config::PolicyConfig;
 use std::sync::Arc;
@@ -72,6 +72,9 @@ impl PolicyFactory {
             }
             PolicyConfig::StickyLeastLoaded => Arc::new(StickyLeastLoadedPolicy::new()),
             PolicyConfig::RendezvousHash => Arc::new(RendezvousHashPolicy::new()),
+            PolicyConfig::BoundedRendezvous { load_factor } => {
+                Arc::new(BoundedRendezvousPolicy::new(*load_factor))
+            }
         }
     }
 
@@ -88,6 +91,9 @@ impl PolicyFactory {
                 Some(Arc::new(StickyLeastLoadedPolicy::new()))
             }
             "rendezvous_hash" | "rendezvoushash" => Some(Arc::new(RendezvousHashPolicy::new())),
+            "bounded_rendezvous" | "boundedrendezvous" => {
+                Some(Arc::new(BoundedRendezvousPolicy::new(1.25)))
+            }
             _ => None,
         }
     }
@@ -151,6 +157,12 @@ mod tests {
         // Test RendezvousHash
         let policy = PolicyFactory::create_from_config(&PolicyConfig::RendezvousHash, None);
         assert_eq!(policy.name(), "rendezvous_hash");
+
+        let policy = PolicyFactory::create_from_config(
+            &PolicyConfig::BoundedRendezvous { load_factor: 1.25 },
+            None,
+        );
+        assert_eq!(policy.name(), "bounded_rendezvous");
 
         // Test StickyLeastLoaded
         let policy = PolicyFactory::create_from_config(&PolicyConfig::StickyLeastLoaded, None);

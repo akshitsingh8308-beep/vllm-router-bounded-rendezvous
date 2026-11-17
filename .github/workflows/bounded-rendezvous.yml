@@ -1,0 +1,41 @@
+name: Bounded rendezvous policy
+
+on:
+  push:
+    paths:
+      - 'src/policies/bounded_rendezvous*'
+      - 'src/policies/mod.rs'
+      - 'src/policies/factory.rs'
+      - 'src/policies/registry.rs'
+      - 'src/config/**'
+      - 'src/main.rs'
+      - 'examples/bounded_rendezvous_bench.rs'
+      - 'tools/bounded_rendezvous_sim.rs'
+      - '.github/workflows/bounded-rendezvous.yml'
+  pull_request:
+    paths:
+      - 'src/policies/bounded_rendezvous*'
+      - 'src/policies/mod.rs'
+      - 'src/policies/factory.rs'
+      - 'src/policies/registry.rs'
+      - 'src/config/**'
+      - 'src/main.rs'
+      - 'examples/bounded_rendezvous_bench.rs'
+      - 'tools/bounded_rendezvous_sim.rs'
+      - '.github/workflows/bounded-rendezvous.yml'
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        run: cargo fmt --all -- --check
+      - name: Test policy
+        run: cargo test --features cpu,ready bounded_rendezvous
+      - name: Run policy benchmark
+        run: cargo run --release --example bounded_rendezvous_bench

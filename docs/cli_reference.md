@@ -14,7 +14,7 @@ Both install an executable named `vllm-router`. Check which executable is on
 your `PATH` before copying flags between installations. Their options are
 similar, but they are not interchangeable. In particular:
 
-- Rust accepts `rendezvous_hash`; Python does not. Both support `kv_aware` in regular and P/D routing. Rust also exposes backend
+- Rust accepts `rendezvous_hash` and `bounded_rendezvous`; Python does not. Both support `kv_aware` in regular and P/D routing. Rust also exposes backend
   selection, tracing, API-key validation URLs, history storage and profiling.
 - Python exposes `--mini-lb`, queue settings and the token bucket refill rate.
   The Rust CLI fixes queue size at `100`, queue timeout at `60` seconds, and
@@ -97,9 +97,10 @@ and the Rust OpenAI backend use different configuration paths. See
 
 | Option | Rust value | Rust default | Python value | Python default | Description |
 | --- | --- | --- | --- | --- | --- |
-| `--policy` | `random, round_robin, cache_aware, kv_aware, power_of_two, consistent_hash, sticky_least_loaded, rendezvous_hash` | `cache_aware` | `random, round_robin, cache_aware, kv_aware, power_of_two, consistent_hash, sticky_least_loaded` | `cache_aware` | Request-level routing policy; also the fallback for both PD stages. |
-| `--prefill-policy` | `random, round_robin, cache_aware, kv_aware, power_of_two, consistent_hash, sticky_least_loaded, rendezvous_hash` | `unset` | `random, round_robin, cache_aware, kv_aware, power_of_two, consistent_hash, sticky_least_loaded` | `unset` | PD prefill policy; unset inherits `--policy`. |
-| `--decode-policy` | `random, round_robin, cache_aware, kv_aware, power_of_two, consistent_hash, sticky_least_loaded, rendezvous_hash` | `unset` | `random, round_robin, cache_aware, kv_aware, power_of_two, consistent_hash, sticky_least_loaded` | `unset` | PD decode policy; unset inherits `--policy`. |
+| `--policy` | `random, round_robin, cache_aware, kv_aware, power_of_two, consistent_hash, sticky_least_loaded, rendezvous_hash, bounded_rendezvous` | `cache_aware` | `random, round_robin, cache_aware, kv_aware, power_of_two, consistent_hash, sticky_least_loaded` | `cache_aware` | Request-level routing policy; also the fallback for both PD stages. |
+| `--prefill-policy` | `random, round_robin, cache_aware, kv_aware, power_of_two, consistent_hash, sticky_least_loaded, rendezvous_hash, bounded_rendezvous` | `unset` | `random, round_robin, cache_aware, kv_aware, power_of_two, consistent_hash, sticky_least_loaded` | `unset` | PD prefill policy; unset inherits `--policy`. |
+| `--decode-policy` | `random, round_robin, cache_aware, kv_aware, power_of_two, consistent_hash, sticky_least_loaded, rendezvous_hash, bounded_rendezvous` | `unset` | `random, round_robin, cache_aware, kv_aware, power_of_two, consistent_hash, sticky_least_loaded` | `unset` | PD decode policy; unset inherits `--policy`. |
+| `--bounded-load-factor` | `f64 >= 1.0` | `1.25` | unavailable | n/a | Soft per-worker in-flight load cap for `bounded_rendezvous`. |
 | `--router-temperature` | `f64` | `0.0` | `float` | `0.0` | KV-aware selection temperature for regular routing and PD prefill; zero selects the lowest-cost worker. |
 | `--kv-penalty-host` | `f64` | `0.8` | `float` | `0.8` | Host-tier KV transfer credit for kv_aware. |
 | `--kv-penalty-external` | `f64` | `0.6` | `float` | `0.6` | External-tier KV transfer credit for kv_aware. |

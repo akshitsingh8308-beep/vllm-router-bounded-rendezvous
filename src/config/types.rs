@@ -1063,6 +1063,13 @@ pub enum PolicyConfig {
 
     #[serde(rename = "rendezvous_hash")]
     RendezvousHash,
+
+    /// Session affinity with an in-flight load cap.
+    #[serde(rename = "bounded_rendezvous")]
+    BoundedRendezvous {
+        #[serde(default = "default_bounded_load_factor")]
+        load_factor: f64,
+    },
 }
 
 /// Manually configured KV event publishers for one regular-mode worker.
@@ -1097,8 +1104,13 @@ impl PolicyConfig {
             PolicyConfig::ConsistentHash { .. } => "consistent_hash",
             PolicyConfig::StickyLeastLoaded => "sticky_least_loaded",
             PolicyConfig::RendezvousHash => "rendezvous_hash",
+            PolicyConfig::BoundedRendezvous { .. } => "bounded_rendezvous",
         }
     }
+}
+
+fn default_bounded_load_factor() -> f64 {
+    1.25
 }
 
 fn default_kv_penalty_host() -> f64 {

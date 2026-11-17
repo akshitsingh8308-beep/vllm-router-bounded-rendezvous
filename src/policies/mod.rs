@@ -8,6 +8,8 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::Arc;
 
+mod bounded_rendezvous;
+mod bounded_rendezvous_core;
 mod cache_aware;
 mod consistent_hash;
 mod factory;
@@ -20,6 +22,7 @@ mod rendezvous_hash;
 mod round_robin;
 mod sticky_least_loaded;
 
+pub use bounded_rendezvous::BoundedRendezvousPolicy;
 pub use cache_aware::PreparedCacheSelection;
 pub use cache_aware::{CacheAwareCandidate, CacheAwarePlacement, CacheAwarePolicy};
 pub use consistent_hash::ConsistentHashPolicy;

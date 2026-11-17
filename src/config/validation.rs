@@ -512,6 +512,15 @@ impl ConfigValidator {
             PolicyConfig::RendezvousHash => {
                 // No specific validation needed
             }
+            PolicyConfig::BoundedRendezvous { load_factor } => {
+                if !load_factor.is_finite() || *load_factor < 1.0 {
+                    return Err(ConfigError::InvalidValue {
+                        field: "load_factor".to_string(),
+                        value: load_factor.to_string(),
+                        reason: "Must be finite and >= 1.0".to_string(),
+                    });
+                }
+            }
         }
         Ok(())
     }
@@ -1038,6 +1047,22 @@ fn base_url_without_rank(url: &str) -> &str {
 #[cfg(all(test, feature = "cpu", feature = "ready"))]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bounded_rendezvous_rejects_invalid_load_factor() {
+        let config_for = |load_factor| {
+            RouterConfig::new(
+                RoutingMode::Regular {
+                    worker_urls: vec!["http://worker:8000".to_string()],
+                },
+                PolicyConfig::BoundedRendezvous { load_factor },
+            )
+        };
+        assert!(ConfigValidator::validate(&config_for(1.25)).is_ok());
+        for factor in [0.99, f64::NAN, f64::INFINITY] {
+            assert!(ConfigValidator::validate(&config_for(factor)).is_err());
+        }
+    }
 
     #[test]
     fn session_affinity_ttl_is_optional_and_bounded() {
