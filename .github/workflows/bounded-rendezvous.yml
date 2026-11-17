@@ -36,6 +36,6 @@ jobs:
       - name: Format
         run: cargo fmt --all -- --check
       - name: Test policy
-        run: cargo test --features cpu,ready bounded_rendezvous
+        run: cargo test --lib --features cpu,ready bounded_rendezvous
       - name: Run policy benchmark
-        run: cargo run --release --example bounded_rendezvous_bench
+        run: cargo run --example bounded_rendezvous_bench
